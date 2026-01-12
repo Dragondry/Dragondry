@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime Image Gallery</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f0f0f0; text-align: center; }
+        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px; }
+        .image-item { border: 1px solid #ccc; padding: 10px; background: white; border-radius: 8px; }
+        img { max-width: 200px; height: auto; }
+        button { margin-top: 10px; padding: 5px 10px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Anime Image Download Gallery</h1>
+    <p>Click the download button below each image to save it.</p>
+    <div class="gallery">
+        <!-- Example image items; replace with your own -->
+        <div class="image-item">
+            <img src="images/naruto.jpg" alt="Naruto">
+            <br>
+            <button onclick="downloadImage('images/naruto.jpg', 'naruto.jpg')">Download</button>
+        </div>
+        <div class="image-item">
+            <img src="images/onepiece.jpg" alt="One Piece">
+            <br>
+            <button onclick="downloadImage('images/onepiece.jpg', 'onepiece.jpg')">Download</button>
+        </div>
+        <!-- Add more images here -->
+    </div>
+
+    <script>
+        function downloadImage(url, filename) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
