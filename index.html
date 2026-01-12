@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Realm - Your Custom Site</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #1a1a2e, #16213e);
+            color: #fff;
+            overflow-x: hidden;
+        }
+        header {
+            text-align: center;
+            padding: 50px 20px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            font-size: 3em;
+            text-shadow: 0 0 10px #ff4500;
+        }
+        .dragon {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: url('https://via.placeholder.com/100x100/ff0000/ffffff?text=Dragon') no-repeat center;
+            background-size: cover;
+            animation: move 10s infinite linear, colorChange 5s infinite;
+        }
+        @keyframes move {
+            0% { left: -100px; top: 20%; }
+            50% { left: 100vw; top: 60%; }
+            100% { left: -100px; top: 20%; }
+        }
+        @keyframes colorChange {
+            0% { filter: hue-rotate(0deg); }
+            33% { filter: hue-rotate(120deg); }
+            66% { filter: hue-rotate(240deg); }
+            100% { filter: hue-rotate(0deg); }
+        }
+        .content {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        a {
+            color: #ff4500;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Dragons -->
+    <div class="dragon" id="dragon1"></div>
+    <div class="dragon" id="dragon2" style="animation-delay: 2s;"></div>
+    <div class="dragon" id="dragon3" style="animation-delay: 4s;"></div>
+
+    <header>
+        <h1>Welcome to Dragon Realm</h1>
+        <p>Your gateway to epic adventures and treasures!</p>
+    </header>
+
+    <div class="content">
+        <!-- Customize this section: Add links, products, text, images, etc. -->
+        <h2>About Us</h2>
+        <p>This is a customizable section. Replace this text with your content. For example:</p>
+        <ul>
+            <li><a href="https://example.com/product1">Buy Dragon Scale Armor - $99.99</a></li>
+            <li><a href="https://example.com/product2">Dragon Fire Potion - $49.99</a></li>
+            <li><a href="https://example.com/link">Visit Our Blog for Dragon Lore</a></li>
+        </ul>
+        <p>Add images: <img src="https://via.placeholder.com/300x200/000000/ffffff?text=Your+Image" alt="Custom Image"></p>
+        <!-- End customization -->
+    </div>
+
+    <footer>
+        <p>&copy; 2023 Dragon Realm. All rights reserved. <a href="https://example.com/contact">Contact Us</a></p>
+    </footer>
+
+    <script>
+        // JavaScript for additional interactivity (e.g., more dragons or effects)
+        // You can add more logic here if needed.
+        console.log("Dragon site loaded!");
+    </script>
+</body>
+</html>
