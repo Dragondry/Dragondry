@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1020"><meta name="description" content="NEXUS OS — your personal command center">
+  <title>NEXUS OS · Command Center</title><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="#"><span class="brand-mark">N</span><span>NEXUS <small>PERSONAL OS</small></span></a>
+    <div class="side-label">WORKSPACE</div>
+    <button class="nav active" data-view="overview">◫ <span>Overview</span></button>
+    <button class="nav" data-view="tasks">✓ <span>Tasks</span><b id="nav-task-count">0</b></button>
+    <button class="nav" data-view="notes">▤ <span>Notes</span></button>
+    <div class="side-label second">SYSTEM</div>
+    <button class="nav" data-view="settings">⚙ <span>Settings</span></button>
+    <div class="side-bottom"><span class="pulse"></span><span id="connection-label">Local mode</span><small>v0.1.0 · Preview</small></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><div class="eyebrow" id="today-label">PERSONAL COMMAND CENTER</div><h1 id="page-title">Overview</h1></div><div class="top-actions"><span class="mode-pill" id="mode-pill">LOCAL</span><button class="icon-btn" id="theme-toggle" aria-label="Toggle theme">◐</button><div class="avatar">D</div></div></header>
+    <section id="view-overview" class="view">
+      <div class="welcome"><div><div class="eyebrow">YOUR SPACE, IN CONTROL</div><h2>Make room for <em>what matters.</em></h2><p>Your work, ideas, and next steps — all in one place.</p></div><button class="primary" id="quick-add-task">＋ New task</button></div>
+      <div class="stats"><article class="stat"><span>OPEN TASKS</span><strong id="stat-open">0</strong><small>Ready for your attention</small></article><article class="stat"><span>COMPLETED</span><strong id="stat-done">0</strong><small>Progress you've made</small></article><article class="stat"><span>NOTES</span><strong id="stat-notes">0</strong><small>Ideas captured</small></article><article class="stat"><span>COMPLETION</span><strong id="stat-rate">0%</strong><small>Of all tasks</small></article></div>
+      <div class="columns"><section class="panel"><div class="panel-head"><div><div class="eyebrow">FOCUS</div><h3>Priority tasks</h3></div><button class="text-btn" data-go="tasks">View all →</button></div><div id="overview-tasks" class="items"></div></section><section class="panel"><div class="panel-head"><div><div class="eyebrow">THOUGHTS</div><h3>Recent notes</h3></div><button class="text-btn" data-go="notes">View all →</button></div><div id="overview-notes" class="items"></div></section></div>
+    </section>
+    <section id="view-tasks" class="view hidden"><div class="toolbar"><input id="task-search" placeholder="Search tasks…" aria-label="Search tasks"><select id="task-filter"><option value="all">All tasks</option><option value="open">Open</option><option value="done">Completed</option></select><button class="primary" id="add-task">＋ Add task</button></div><div class="panel"><div id="task-list" class="items"></div></div></section>
+    <section id="view-notes" class="view hidden"><div class="toolbar"><input id="note-search" placeholder="Search notes…" aria-label="Search notes"><button class="primary" id="add-note">＋ New note</button></div><div id="note-grid" class="note-grid"></div></section>
+    <section id="view-settings" class="view hidden"><div class="panel settings"><div class="eyebrow">APPLICATION</div><h3>Workspace settings</h3><p>NEXUS OS runs locally by default. When hosted by its FastAPI server, it automatically switches to persistent SQLite storage.</p><div class="setting-row"><div><b>Connection</b><small id="settings-connection">Checking backend…</small></div><span class="mode-pill" id="settings-mode">LOCAL</span></div><div class="setting-row"><div><b>Data storage</b><small id="storage-info">This browser's local storage</small></div></div><div class="setting-row"><div><b>Export data</b><small>Download a JSON backup of your tasks and notes.</small></div><button class="secondary" id="export-data">Export JSON</button></div><div class="setting-row"><div><b>Import backup</b><small>Restore a previous NEXUS JSON export.</small></div><label class="secondary file-label">Choose file<input type="file" id="import-data" accept="application/json"></label></div><p class="muted">Tip: browser-local data is not automatically synced between devices. Use the backend for shared persistent storage; add authentication before exposing it publicly.</p></div></section>
+    <footer> NEXUS OS <span>Built for focus · Your data stays yours</span></footer>
+  </main>
+</div>
+<dialog id="task-dialog"><form method="dialog" id="task-form"><div class="dialog-head"><h3 id="task-dialog-title">Create task</h3><button class="icon-btn" value="cancel" aria-label="Close">×</button></div><input type="hidden" id="task-id"><label>Task title<input id="task-title" maxlength="180" required placeholder="What needs to get done?"></label><label>Description<textarea id="task-description" rows="3" maxlength="2000" placeholder="Add details (optional)"></textarea></label><div class="form-row"><label>Priority<select id="task-priority"><option>Normal</option><option>High</option><option>Low</option></select></label><label>Due date<input type="date" id="task-due"></label></div><button class="primary full" id="save-task" value="default">Save task</button></form></dialog>
+<dialog id="note-dialog"><form method="dialog" id="note-form"><div class="dialog-head"><h3 id="note-dialog-title">New note</h3><button class="icon-btn" value="cancel" aria-label="Close">×</button></div><input type="hidden" id="note-id"><label>Title<input id="note-title" maxlength="180" required placeholder="A thought worth keeping"></label><label>Content<textarea id="note-content" rows="8" maxlength="10000" placeholder="Write it down…"></textarea></label><button class="primary full" value="default">Save note</button></form></dialog>
+<div id="toast" role="status" aria-live="polite"></div><script src="app.js"></script>
+</body></html>
