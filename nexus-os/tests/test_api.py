@@ -33,6 +33,7 @@ class NexusApiTests(unittest.TestCase):
         finally:
             if old is not None:
                 os.environ["OPENAI_API_KEY"] = old
-\n    def test_validation(self):
+
+    def test_validation(self):
         self.assertEqual(client.post("/api/tasks",json={"title":"","priority":"Urgent"}).status_code,422)
 if __name__ == "__main__": unittest.main()
