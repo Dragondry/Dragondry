@@ -24,6 +24,15 @@ class NexusApiTests(unittest.TestCase):
         self.assertEqual(r.status_code,201); note_id=r.json()["id"]
         self.assertEqual(client.patch(f"/api/notes/{note_id}",json={"title":"Updated"}).json()["title"],"Updated")
         self.assertEqual(client.delete(f"/api/notes/{note_id}").status_code,204)
-    def test_validation(self):
+
+    def test_ai_requires_server_key(self):
+        old = os.environ.pop("OPENAI_API_KEY", None)
+        try:
+            response = client.post("/api/ai/chat", json={"messages":[{"role":"user","content":"Hello"}]})
+            self.assertEqual(response.status_code, 503)
+        finally:
+            if old is not None:
+                os.environ["OPENAI_API_KEY"] = old
+\n    def test_validation(self):
         self.assertEqual(client.post("/api/tasks",json={"title":"","priority":"Urgent"}).status_code,422)
 if __name__ == "__main__": unittest.main()
