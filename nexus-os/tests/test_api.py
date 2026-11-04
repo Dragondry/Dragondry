@@ -29,7 +29,7 @@ class NexusApiTests(unittest.TestCase):
         old = os.environ.pop("OPENAI_API_KEY", None)
         try:
             response = client.post("/api/ai/chat", json={"messages":[{"role":"user","content":"Hello"}]})
-            self.assertEqual(response.status_code, 503)
+            self.assertEqual(response.status_code, 401)
         finally:
             if old is not None:
                 os.environ["OPENAI_API_KEY"] = old
