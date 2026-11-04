@@ -8,7 +8,7 @@ NEXUS OS is a mobile-first personal workspace with tasks, notes, an AI assistant
 - Bring your own key (BYOK): each user can supply an OpenAI API key in Settings; it is kept in browser session storage and sent per request, never saved in the NEXUS database.
 - Installable PWA on supported Android and desktop browsers.
 - Offline app-shell caching; API and AI require a connection.
-- Local browser storage when used without the backend; SQLite when served by FastAPI.
+- Local browser storage when used without the backend; SQLite for local development or PostgreSQL via `DATABASE_URL` for hosted deployments.
 - JSON backup export/import in local mode.
 
 ## Run locally
@@ -50,7 +50,7 @@ Host the app on an HTTPS domain. Open it in Chrome on Android, then use the brow
 This is a PWA, not a signed APK. It can be installed without an app store. A signed Play Store release or native APK is a separate packaging/release step.
 
 ## Deploy safely
-Use a Python host or container platform and persistent disk for SQLite. Configure HTTPS and the environment variables above. Before allowing public users, add authentication, per-user data isolation, rate limiting, abuse controls, and billing/usage limits. The included starter uses one shared workspace database and is not safe as a public multi-user service without those protections. Never publish your AI API key.
+For a free test deployment, use a Render Free web service and a Neon Free PostgreSQL database. Set `DATABASE_URL` in the Render service environment (use the pooled or direct Neon connection string with SSL enabled). Render Free services sleep after 15 minutes idle and have ephemeral local files, so do not rely on SQLite for hosted data. Configure HTTPS and the environment variables above. Before allowing public users, add authentication, per-user data isolation, rate limiting, abuse controls, and billing/usage limits. The included starter uses one shared workspace database and is not safe as a public multi-user service without those protections. Never publish your AI API key.
 
 ## Tests
 ```bash
