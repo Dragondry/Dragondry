@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -11,36 +10,46 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from sqlalchemy import Column, MetaData, String, Table, create_engine, text
 
 ROOT = Path(__file__).resolve().parents[1]
-DB_PATH = Path(os.getenv("NEXUS_DB_PATH", str(ROOT / "nexus-os.db")))
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    DB_PATH = Path(os.getenv("NEXUS_DB_PATH", str(ROOT / "nexus-os.db")))
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    DATABASE_URL = "sqlite:///" + str(DB_PATH)
+elif DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+
+engine_options = {"pool_pre_ping": True}
+if DATABASE_URL.startswith("sqlite"):
+    engine_options["connect_args"] = {"check_same_thread": False}
+engine = create_engine(DATABASE_URL, **engine_options)
+metadata = MetaData()
+Table("tasks", metadata,
+    Column("id", String, primary_key=True), Column("title", String(180), nullable=False),
+    Column("description", String, nullable=False, default=""), Column("priority", String(16), nullable=False, default="Normal"),
+    Column("status", String(16), nullable=False, default="open"), Column("due_date", String, nullable=True),
+    Column("created_at", String, nullable=False), Column("updated_at", String, nullable=False))
+Table("notes", metadata,
+    Column("id", String, primary_key=True), Column("title", String(180), nullable=False),
+    Column("content", String, nullable=False, default=""), Column("created_at", String, nullable=False),
+    Column("updated_at", String, nullable=False))
 app = FastAPI(title="NEXUS OS API", version="0.2.0", description="Personal workspace and AI assistant")
 
 @contextmanager
 def db():
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    try:
+    with engine.begin() as conn:
         yield conn
-        conn.commit()
-    finally:
-        conn.close()
 
 def init_db():
-    with db() as c:
-        c.executescript("""
-        CREATE TABLE IF NOT EXISTS tasks (
-          id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT NOT NULL DEFAULT '',
-          priority TEXT NOT NULL DEFAULT 'Normal', status TEXT NOT NULL DEFAULT 'open',
-          due_date TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS notes (
-          id TEXT PRIMARY KEY, title TEXT NOT NULL, content TEXT NOT NULL DEFAULT '',
-          created_at TEXT NOT NULL, updated_at TEXT NOT NULL
-        );
-        """)
+    metadata.create_all(engine)
 init_db()
+
+def execute(conn, statement, params=None):
+    return conn.execute(text(statement), params or {})
 
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -76,7 +85,7 @@ class ChatIn(BaseModel):
 
 def rows(table):
     with db() as c:
-        return [dict(r) for r in c.execute(f"SELECT * FROM {table} ORDER BY created_at DESC")]
+        return [dict(r) for r in c.execute(text(f"SELECT * FROM {table} ORDER BY created_at DESC")).mappings().all()]
 
 @app.get("/api/health")
 def health():
@@ -133,26 +142,26 @@ def create_task(payload: TaskIn):
     item = payload.model_dump()
     item.update(id=str(uuid.uuid4()), created_at=stamp, updated_at=stamp)
     with db() as c:
-        c.execute("INSERT INTO tasks VALUES (:id,:title,:description,:priority,:status,:due_date,:created_at,:updated_at)", item)
+        execute(c, "INSERT INTO tasks (id,title,description,priority,status,due_date,created_at,updated_at) VALUES (:id,:title,:description,:priority,:status,:due_date,:created_at,:updated_at)", item)
     return item
 
 @app.patch("/api/tasks/{task_id}")
 def update_task(task_id: str, payload: TaskPatch):
     changes = payload.model_dump(exclude_unset=True)
     with db() as c:
-        old = c.execute("SELECT * FROM tasks WHERE id=?", (task_id,)).fetchone()
+        old = execute(c, "SELECT * FROM tasks WHERE id=:id", {"id": task_id}).mappings().first()
         if not old:
             raise HTTPException(404, "Task not found")
         item = dict(old)
         item.update(changes)
         item["updated_at"] = now()
-        c.execute("UPDATE tasks SET title=:title,description=:description,priority=:priority,status=:status,due_date=:due_date,updated_at=:updated_at WHERE id=:id", item)
+        execute(c, "UPDATE tasks SET title=:title,description=:description,priority=:priority,status=:status,due_date=:due_date,updated_at=:updated_at WHERE id=:id", item)
     return item
 
 @app.delete("/api/tasks/{task_id}", status_code=204)
 def remove_task(task_id: str):
     with db() as c:
-        cur = c.execute("DELETE FROM tasks WHERE id=?", (task_id,))
+        cur = execute(c, "DELETE FROM tasks WHERE id=:id", {"id": task_id})
         if not cur.rowcount:
             raise HTTPException(404, "Task not found")
 
@@ -166,26 +175,26 @@ def create_note(payload: NoteIn):
     item = payload.model_dump()
     item.update(id=str(uuid.uuid4()), created_at=stamp, updated_at=stamp)
     with db() as c:
-        c.execute("INSERT INTO notes VALUES (:id,:title,:content,:created_at,:updated_at)", item)
+        execute(c, "INSERT INTO notes (id,title,content,created_at,updated_at) VALUES (:id,:title,:content,:created_at,:updated_at)", item)
     return item
 
 @app.patch("/api/notes/{note_id}")
 def update_note(note_id: str, payload: NotePatch):
     changes = payload.model_dump(exclude_unset=True)
     with db() as c:
-        old = c.execute("SELECT * FROM notes WHERE id=?", (note_id,)).fetchone()
+        old = execute(c, "SELECT * FROM notes WHERE id=:id", {"id": note_id}).mappings().first()
         if not old:
             raise HTTPException(404, "Note not found")
         item = dict(old)
         item.update(changes)
         item["updated_at"] = now()
-        c.execute("UPDATE notes SET title=:title,content=:content,updated_at=:updated_at WHERE id=:id", item)
+        execute(c, "UPDATE notes SET title=:title,content=:content,updated_at=:updated_at WHERE id=:id", item)
     return item
 
 @app.delete("/api/notes/{note_id}", status_code=204)
 def remove_note(note_id: str):
     with db() as c:
-        cur = c.execute("DELETE FROM notes WHERE id=?", (note_id,))
+        cur = execute(c, "DELETE FROM notes WHERE id=:id", {"id": note_id})
         if not cur.rowcount:
             raise HTTPException(404, "Note not found")
 
