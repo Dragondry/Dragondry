@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -80,13 +80,16 @@ def rows(table):
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "service": "nexus-os", "version": "0.2.0", "ai_configured": bool(os.getenv("OPENAI_API_KEY"))}
+    return {"ok": True, "service": "nexus-os", "version": "0.2.0", "ai_configured": True, "ai_mode": "BYOK"}
 
 @app.post("/api/ai/chat")
-async def ai_chat(payload: ChatIn):
-    api_key = os.getenv("OPENAI_API_KEY")
+async def ai_chat(payload: ChatIn, x_openai_api_key: Optional[str] = Header(default=None)):
+    # BYOK: the browser supplies a key for this request only. Never persist it.
+    api_key = (x_openai_api_key or os.getenv("OPENAI_API_KEY") or "").strip()
     if not api_key:
-        raise HTTPException(503, "AI is not configured yet. The app owner must add an OPENAI_API_KEY on the server.")
+        raise HTTPException(401, "Add your OpenAI API key in NEXUS Settings to use AI.")
+    if len(api_key) > 256 or not api_key.startswith("sk-"):
+        raise HTTPException(400, "That API key format does not look valid.")
     tasks = rows("tasks")[:40]
     notes = rows("notes")[:20]
     context = (
@@ -113,7 +116,7 @@ async def ai_chat(payload: ChatIn):
         answer = data["choices"][0]["message"]["content"]
         return {"reply": answer, "model": model}
     except httpx.HTTPStatusError as exc:
-        detail = "AI provider rejected the request. Check the server API key, model, and billing."
+        detail = "AI provider rejected the key or request. Check your API key, model, and provider account."
         if exc.response.status_code == 429:
             detail = "AI provider rate limit or quota reached. Check your provider usage and billing."
         raise HTTPException(502, detail) from exc
